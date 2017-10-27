@@ -164,7 +164,7 @@ def main(argv):
   finally:
     archive.close()
 
-  if subprocess.call(['xz', '-9', output_fullname]) != 0:
+  if subprocess.call(['xz', '-9', '--threads=0', '-e', output_fullname]) != 0:
     print 'xz -9 failed!'
     return 1
 
