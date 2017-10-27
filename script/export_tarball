@@ -48,19 +48,26 @@ TEST_DATA_DIRS = (
 
 NONESSENTIAL_DIRS = (
     'breakpad/src/processor/testdata',
+    'build/linux/debian_jessie_amd64-sysroot',
+    'build/linux/debian_jessie_i386-sysroot',
     'buildtools/third_party',
     'chrome/browser/resources/tracing/tests',
     'courgette/testdata',
     'data',
     'native_client/src/trusted/service_runtime/testdata',
-    'src/chrome/test/data',
+    'native_client/toolchain',
     'o3d/tests',
     'ppapi/native_client/tests',
     'third_party/angle/samples/gles2_book',
+    'third_party/breakpad/',
+    'third_party/catapult/third_party/py_vulcanize/third_party/rcssmin/tests/',
     'third_party/findbugs',
     'third_party/hunspell_dictionaries',
     'third_party/hunspell/tests',
     'third_party/lighttpd',
+    'third_party/llvm-build',
+    'third_party/node/linux',
+    'third_party/perl',
     'third_party/sqlite/src/test',
     'third_party/sqlite/test',
     'third_party/vc_80',
@@ -72,6 +79,7 @@ NONESSENTIAL_DIRS = (
 TESTDIRS = (
     'chrome/test/data',
     'content/test/data',
+    'extensions/test/data',
     'media/test/data',
 )
 
