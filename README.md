@@ -13,8 +13,11 @@ dependencies of all platforms.
 ### 1. Bootstrap
 
 ```bash
-$ ./script/bootstrap
+$ ./script/bootstrap git://downstream.repo.org/chromium.git
 ```
+
+This will download upstream chromium repository, and set an alternate origin
+for the passed parameter.
 
 ### 2. Generate the source tarball
 
@@ -22,17 +25,8 @@ $ ./script/bootstrap
 $ ./script/sync 38.0.2125.101
 ```
 
-### 3. Upload generated source tarball to GitHub Release
-
-```bash
-$ ./script/upload
-```
-
-## Keep updated with Chrome Releases blog
-
-The source tarballs in this repo are kept updated with the
-[Chrome Releases](http://googlechromereleases.blogspot.com) blog, you can find
-the script under `script/chrome_releases_monitor/`.
+Sync will accept as parameter any head that will be available in the provided
+chromium repository. Then it will generate a tarball with the source code.
 
 ## License
 
