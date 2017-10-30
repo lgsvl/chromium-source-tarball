@@ -12,7 +12,7 @@ cd "$SOURCE"
 export PATH=$PATH:$SOURCE/vendor/depot_tools
 
 cd src
-git fetch lgsvl --tags
+git fetch alternate --tags
 git reset --hard $VERSION
 git clean -fdx
 gclient sync --with_branch_heads --with_tags --delete_unversioned_trees

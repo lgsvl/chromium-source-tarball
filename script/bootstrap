@@ -1,5 +1,10 @@
 #!/bin/bash
 
+USAGE="Usage: $0 git_repository"
+if [ $# -lt 1 ]; then echo -e "$USAGE" >&2; exit 1; fi
+
+REPOSITORY=${1}
+
 # Goto source root.
 SOURCE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/.."
 cd "$SOURCE"
@@ -9,6 +14,6 @@ export PATH=$PATH:$SOURCE/vendor/depot_tools
 fetch --nohooks chromium
 
 pushd src
-git remote add lgsvl ssh://git@git.igalia.com:4428/dape/chromium-src.git
-git fetch lgsvl
+git remote add alternate "${REPOSITORY}"
+git fetch alternate
 popd
