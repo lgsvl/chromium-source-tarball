@@ -15,7 +15,8 @@ cd src
 git fetch lgsvl --tags
 git reset --hard $VERSION
 git clean -fdx
-gclient sync
+gclient sync --with_branch_heads --with_tags --delete_unversioned_trees
+
 
 cd "$SOURCE"
 ./script/export_tarball --test-data --remove-nonessential-files chromium-$VERSION
