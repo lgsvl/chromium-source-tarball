@@ -66,7 +66,6 @@ NONESSENTIAL_DIRS = (
     'third_party/hunspell/tests',
     'third_party/lighttpd',
     'third_party/llvm-build',
-    'third_party/node/linux',
     'third_party/perl',
     'third_party/sqlite/src/test',
     'third_party/sqlite/test',
