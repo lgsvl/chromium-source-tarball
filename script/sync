@@ -12,9 +12,9 @@ cd "$SOURCE"
 export PATH=$PATH:$SOURCE/vendor/depot_tools
 
 cd src
+git fetch lgsvl --tags
 git reset --hard $VERSION
-gclient runhooks
-
+git clean -fdx
 gclient sync
 
 cd "$SOURCE"

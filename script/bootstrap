@@ -10,3 +10,8 @@ git submodule update --init --recursive
 export PATH=$PATH:$SOURCE/vendor/depot_tools
 
 fetch --nohooks chromium
+
+pushd src
+git remote add lgsvl ssh://git@git.igalia.com:4428/dape/chromium-src.git
+git fetch lgsvl
+popd
