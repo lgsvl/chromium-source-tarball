@@ -1,5 +1,8 @@
+*~
 *.swp
 *.pyc
+*.tar
+*.tar.xz
 .gclient
 .gclient_entries
 /src/
