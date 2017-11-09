@@ -65,6 +65,7 @@ NONESSENTIAL_DIRS = (
     'third_party/findbugs',
     'third_party/hunspell_dictionaries',
     'third_party/hunspell/tests',
+    'third_party/instrumented_libraries/binaries',
     'third_party/lighttpd',
     'third_party/llvm-build',
     'third_party/perl',
