@@ -60,7 +60,7 @@ NONESSENTIAL_DIRS = (
     'o3d/tests',
     'ppapi/native_client/tests',
     'third_party/angle/samples/gles2_book',
-    'third_party/breakpad/',
+    'third_party/breakpad/src/processor/testdata',
     'third_party/catapult/third_party/py_vulcanize/third_party/rcssmin/tests/',
     'third_party/findbugs',
     'third_party/hunspell_dictionaries',
