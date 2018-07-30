@@ -74,7 +74,15 @@ NONESSENTIAL_DIRS = (
     'third_party/vc_80',
     'third_party/xdg-utils/tests',
     'tools/gyp/test',
-    'v8/test',
+    'v8/test/cctest',
+    'v8/test/debugger',
+    'v8/test/fuzzer',
+    'v8/test/inspector',
+    'v8/test/js-perf-test',
+    'v8/test/message',
+    'v8/test/mjsunit',
+    'v8/test/unittests',
+    'v8/test/webkit',
 )
 
 TESTDIRS = (
