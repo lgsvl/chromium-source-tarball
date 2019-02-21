@@ -19,4 +19,4 @@ gclient sync --with_branch_heads --with_tags --delete_unversioned_trees
 
 
 cd "$SOURCE"
-./script/export_tarball --test-data --remove-nonessential-files chromium-$VERSION
+./script/export_tarball --remove-nonessential-files  --src-dir=src chromium-$VERSION

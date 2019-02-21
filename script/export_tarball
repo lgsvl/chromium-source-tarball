@@ -4,7 +4,7 @@
 # found in the LICENSE file.
 
 """
-This tool creates a tarball with all the sources, but without .svn directories.
+This tool creates a tarball with all the sources, but without .git directories.
 
 It can also remove files which are not strictly required for build, so that
 the resulting tarball can be reasonably small (last time it was ~110 MB).
@@ -23,12 +23,23 @@ import sys
 import tarfile
 
 
-TEST_DATA_DIRS = (
+NONESSENTIAL_DIRS = (
+    'build/linux/debian_sid_amd64-sysroot',
+    'build/linux/debian_sid_i386-sysroot',
     'chrome/common/extensions/docs',
-    'chrome/tools/test/reference_build',
-    'third_party/trace-viewer/test_data',
-    'third_party/webgl/src/sdk/tests',
-    'third_party/yasm/source/patched-yasm/modules/arch/lc3b/tests',
+    'native_client/toolchain',
+    'tools/perf',
+    'third_party/angle/samples/gles2_book',
+    'third_party/findbugs',
+    'third_party/hunspell_dictionaries',
+    'third_party/hunspell/tests',
+    'third_party/liblouis/src/tests/harness',
+    'third_party/llvm-build',
+    'third_party/perl',
+    'third_party/sqlite/src/test',
+    'third_party/swiftshader/third_party/LLVM',
+    'third_party/swiftshader/third_party/llvm-7.0',
+    'third_party/xdg-utils/tests',
     'third_party/yasm/source/patched-yasm/modules/arch/x86/tests',
     'third_party/yasm/source/patched-yasm/modules/dbgfmts/dwarf2/tests',
     'third_party/yasm/source/patched-yasm/modules/objfmts/bin/tests',
@@ -40,98 +51,96 @@ TEST_DATA_DIRS = (
     'third_party/yasm/source/patched-yasm/modules/objfmts/win64/tests',
     'third_party/yasm/source/patched-yasm/modules/objfmts/xdf/tests',
     'third_party/WebKit/LayoutTests',
-    'third_party/WebKit/ManualTests',
-    'third_party/WebKit/PerformanceTests',
-    'third_party/WebKit/Source/devtools/devtools-node-modules',
     'third_party/WebKit/Tools/Scripts',
+    'tools/gyp/test',
+    'v8/test',
 )
 
-NONESSENTIAL_DIRS = (
-    'breakpad/src/processor/testdata',
-    'build/linux/debian_jessie_amd64-sysroot',
-    'build/linux/debian_jessie_i386-sysroot',
+ESSENTIAL_FILES = (
+    'chrome/test/data/webui/i18n_process_css_test.html',
+    'chrome/test/data/webui/web_ui_test.mojom',
+    'v8/test/torque/test-torque.tq',
+)
+
+TEST_DIRS = (
     'buildtools/third_party/libc++/trunk/test',
     'buildtools/third_party/libunwind/trunk/test',
-    'chrome/browser/resources/tracing/tests',
-    'courgette/testdata',
-    'data',
-    'native_client/src/trusted/service_runtime/testdata',
-    'native_client/toolchain',
-    'o3d/tests',
-    'ppapi/native_client/tests',
-    'third_party/angle/samples/gles2_book',
-    'third_party/breakpad/src/processor/testdata',
-    'third_party/catapult/third_party/py_vulcanize/third_party/rcssmin/tests/',
-    'third_party/findbugs',
-    'third_party/hunspell_dictionaries',
-    'third_party/hunspell/tests',
-    'third_party/instrumented_libraries/binaries',
-    'third_party/lighttpd',
-    'third_party/llvm-build',
-    'third_party/perl',
-    'third_party/sqlite/src/test',
-    'third_party/sqlite/test',
-    'third_party/vc_80',
-    'third_party/xdg-utils/tests',
-    'tools/gyp/test',
-    'v8/test/cctest',
-    'v8/test/debugger',
-    'v8/test/fuzzer',
-    'v8/test/inspector',
-    'v8/test/js-perf-test',
-    'v8/test/message',
-    'v8/test/mjsunit',
-    'v8/test/unittests',
-    'v8/test/webkit',
-)
-
-TESTDIRS = (
     'chrome/test/data',
+    'components/test/data',
     'content/test/data',
+    'courgette/testdata',
     'extensions/test/data',
     'media/test/data',
+    'native_client/src/trusted/service_runtime/testdata',
+    'third_party/angle/third_party/deqp/src/android/cts',
+    'third_party/angle/third_party/deqp/src/external/openglcts',
+    'third_party/angle/third_party/deqp/src/external/vulkancts',
+    'third_party/blink/manual_tests',
+    'third_party/blink/perf_tests',
+    'third_party/blink/web_tests',
+    'third_party/breakpad/breakpad/src/processor/testdata',
+    'third_party/catapult/tracing/test_data',
+    'third_party/deqp/src/android/cts',
+    'third_party/deqp/src/external/openglcts',
+    'third_party/deqp/src/external/vulkancts',
+    'third_party/webgl/src/sdk/tests',
 )
-
-
-def GetSourceDirectory():
-  return os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 
 # Workaround lack of the exclude parameter in add method in python-2.4.
 # TODO(phajdan.jr): remove the workaround when it's not needed on the bot.
 class MyTarFile(tarfile.TarFile):
   def set_remove_nonessential_files(self, remove):
+    # pylint: disable=attribute-defined-outside-init
     self.__remove_nonessential_files = remove
 
+  def set_verbose(self, verbose):
+    # pylint: disable=attribute-defined-outside-init
+    self.__verbose = verbose
+
+  def set_src_dir(self, src_dir):
+    # pylint: disable=attribute-defined-outside-init
+    self.__src_dir = src_dir
+
+  def __report_skipped(self, name):
+    if self.__verbose:
+      print 'D\t%s' % name
+
+  def __report_added(self, name):
+    if self.__verbose:
+      print 'A\t%s' % name
+
   def add(self, name, arcname=None, recursive=True, exclude=None, filter=None):
-    head, tail = os.path.split(name)
-    if tail in ('.svn', '.git'):
+    # pylint: disable=redefined-builtin
+    _, file_name = os.path.split(name)
+    if file_name in ('.git', '.svn', 'out'):
+      self.__report_skipped(name)
       return
 
     if self.__remove_nonessential_files:
       # WebKit change logs take quite a lot of space. This saves ~10 MB
       # in a bzip2-compressed tarball.
       if 'ChangeLog' in name:
+        self.__report_skipped(name)
         return
 
-      # Directories that contains only test data can be safely removed.
-      for data_dir in TEST_DATA_DIRS:
-        dir_path = os.path.join(GetSourceDirectory(), data_dir)
-        if name.startswith(dir_path):
-          return
+      # Preserve GYP/GN files, and other potentially critical files, so that
+      # build/gyp_chromium / gn gen can work.
+      rel_name = os.path.relpath(name, self.__src_dir)
+      keep_file = ('.gyp' in file_name or
+                   '.gn' in file_name or
+                   '.isolate' in file_name or
+                   '.grd' in file_name or
+                   rel_name in ESSENTIAL_FILES)
 
-      # Remove contents of non-essential directories, but preserve gyp files,
-      # so that build/gyp_chromium can work.
-      for nonessential_dir in (NONESSENTIAL_DIRS + TESTDIRS):
-        dir_path = os.path.join(GetSourceDirectory(), nonessential_dir)
-        if (name.startswith(dir_path) and
-            os.path.isfile(name) and
-            '.gyp' not in name and
-            '.grd' not in name and
-            '.isolate' not in name and
-            '.gn' not in name):
-          return
+      # Remove contents of non-essential directories.
+      if not keep_file:
+        for nonessential_dir in (NONESSENTIAL_DIRS + TEST_DIRS):
+          if rel_name.startswith(nonessential_dir) and os.path.isfile(name):
+            self.__report_skipped(name)
+            return
 
+    self.__report_added(name)
     tarfile.TarFile.add(self, name, arcname=arcname, recursive=recursive)
 
 
@@ -142,6 +151,11 @@ def main(argv):
                     dest="remove_nonessential_files",
                     action="store_true", default=False)
   parser.add_option("--test-data", action="store_true")
+  # TODO(phajdan.jr): Remove --xz option when it's not needed for compatibility.
+  parser.add_option("--xz", action="store_true")
+  parser.add_option("--verbose", action="store_true", default=False)
+  parser.add_option("--progress", action="store_true", default=False)
+  parser.add_option("--src-dir")
 
   options, args = parser.parse_args(argv)
 
@@ -150,38 +164,78 @@ def main(argv):
     print '(without .tar.xz extension).'
     return 1
 
-  if not os.path.exists(GetSourceDirectory()):
-    print 'Cannot find the src directory ' + GetSourceDirectory()
+  if not os.path.exists(options.src_dir):
+    print 'Cannot find the src directory ' + options.src_dir
     return 1
 
-  # These two commands are from src/DEPS; please keep them in sync.
+  # Read Chromium's version number so we can take different code paths
+  # depending on the milestone.
+  # For now, we are only interested in the milestone number.
+  version_major = int(subprocess.check_output(
+      ['python', 'build/util/version.py', '-f', 'chrome/VERSION',
+       '-t', '@MAJOR@'],
+      cwd=options.src_dir).strip())
+
+  # These commands are from src/DEPS; please keep them in sync.
   if subprocess.call(['python', 'build/util/lastchange.py', '-o',
-                      'build/util/LASTCHANGE'], cwd=GetSourceDirectory()) != 0:
+                      'build/util/LASTCHANGE'], cwd=options.src_dir) != 0:
     print 'Could not run build/util/lastchange.py to update LASTCHANGE.'
     return 1
   if subprocess.call(['python', 'build/util/lastchange.py',
                       '-s', 'third_party/skia',
                       '-m', 'SKIA_COMMIT_HASH',
                       '--header', 'skia/ext/skia_commit_hash.h'],
-                     cwd=GetSourceDirectory()) != 0:
+                     cwd=options.src_dir) != 0:
     print 'Could not run build/util/lastchange.py to update skia_commit_hash.h.'
     return 1
+  # The --revision-id-only option was introduced in M64; so we need to skip
+  # this call when building earlier milestones.
+  if version_major >= 64:
+    if subprocess.call(['python', 'build/util/lastchange.py',
+                        '-m', 'GPU_LISTS_VERSION',
+                        '--revision-id-only',
+                        '--header', 'gpu/config/gpu_lists_version.h'],
+                       cwd=options.src_dir) != 0:
+      print('Could not run build/util/lastchange.py to update '
+            'gpu_lists_version.h.')
+      return 1
 
   output_fullname = args[0] + '.tar'
   output_basename = options.basename or os.path.basename(args[0])
 
   archive = MyTarFile.open(output_fullname, 'w')
   archive.set_remove_nonessential_files(options.remove_nonessential_files)
+  archive.set_verbose(options.verbose)
+  archive.set_src_dir(options.src_dir)
   try:
     if options.test_data:
-      for directory in TESTDIRS:
-        archive.add(os.path.join(GetSourceDirectory(), directory),
+      for directory in TEST_DIRS:
+        test_dir = os.path.join(options.src_dir, directory)
+        if not os.path.isdir(test_dir):
+          # A directory may not exist depending on the milestone we're building
+          # a tarball for.
+          print '"%s" not present; skipping.' % test_dir
+          continue
+        archive.add(test_dir,
                     arcname=os.path.join(output_basename, directory))
-    archive.add(GetSourceDirectory(), arcname=output_basename)
+    else:
+      archive.add(options.src_dir, arcname=output_basename)
   finally:
     archive.close()
 
-  if subprocess.call(['xz', '-9', '--threads=0', '--force', output_fullname]) != 0:
+  if options.progress:
+    sys.stdout.flush()
+    pv = subprocess.Popen(
+        ['pv', '--force', output_fullname],
+        stdout=subprocess.PIPE,
+        stderr=sys.stdout)
+    with open(output_fullname + '.xz', 'w') as f:
+      rc = subprocess.call(['xz', '-9', '-'], stdin=pv.stdout, stdout=f)
+    pv.wait()
+  else:
+    rc = subprocess.call(['xz', '-9', '--threads=0', '--force', output_fullname])
+
+  if rc != 0:
     print 'xz -9 failed!'
     return 1
 
